@@ -9,11 +9,11 @@ import (
 // 1. extractsPagination in request
 // 2. .sorts persons
 // 3. responds with subset of persons in page.
-func handleGetPersons(w http.ResponseWriter, r *http.Request){}
+func handleGetPersons(w http.ResponseWriter, r *http.Request) {}
 
 // handleGetPerson handles HTTP requests of the form:
 //     GET /persons/{personid}
-func handleGetPerson(w http.ResponseWriter, r *http.Request){}
+func handleGetPerson(w http.ResponseWriter, r *http.Request) {}
 
 // handleNewPerson handles HTTP requests of the form:
 //     POST /persons
@@ -23,4 +23,6 @@ func handleGetPerson(w http.ResponseWriter, r *http.Request){}
 // 3. validates
 // 4. adds person to list of persons
 // 5. responds with inserted person.
-func handleNewPerson(w http.ResponseWriter, r *http.Request){}
+func handleNewPerson(w http.ResponseWriter, r *http.Request) {}
+
+func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {}

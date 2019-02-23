@@ -3,11 +3,13 @@ package models
 import (
 	"errors"
 	"strings"
+	"github.com/jinzhu/gorm"
 )
 
 // Person details of a person
 type Person struct {
-	ID   string `json:"id"`
+	gorm.Model
+	UUID   string `json:"id"`
 	Name string `json:"name"`
 	Age  int    `json:"age"`
 }
@@ -15,7 +17,7 @@ type Person struct {
 //Valid to check validity of a person's details
 func (p Person) Valid() error {
 	msg := ""
-	if len(strings.TrimSpace(p.ID)) == 0 {
+	if len(strings.TrimSpace(p.UUID)) == 0 {
 		msg += "id cannot be empty"
 	}
 
