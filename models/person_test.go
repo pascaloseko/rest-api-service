@@ -22,7 +22,7 @@ func SetUpTests() *gorm.DB {
 	return db
 }
 
-func TestResponses(t *testing.T) {
+func TestGetPersons(t *testing.T) {
 	SetUpTests()
 	t.Run("Catch by arguments", func(t *testing.T) {
 		// Important: Use database files here (snake_case) and not struct variables (CamelCase)
@@ -33,6 +33,5 @@ func TestResponses(t *testing.T) {
 		if len(result) != 1 {
 			t.Fatalf("Returned sets is not equal to 1. Received %d", len(result))
 		}
-		// all other checks from reply
 	})
 }

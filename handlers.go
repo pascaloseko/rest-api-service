@@ -2,20 +2,17 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
+	"math"
 	"net/http"
+	"sort"
+	"strconv"
+
+	"github.com/pascaloseko/go-rest/models"
 )
 
-func respondWithError(w http.ResponseWriter, code int, message string) {
-	respondWithJSON(w, code, map[string]string{"error": message})
-}
-
-func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
-	response, _ := json.Marshal(payload)
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	w.Write(response)
-}
+var persons = make(map[string]models.Person)
 
 // handleGetPersons handles HTTP requests of the form:
 //     GET /persons?pageNumber=1&pageSize=300
@@ -23,7 +20,30 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 // 2. .sorts persons
 // 3. responds with subset of persons in page.
 func handleGetPersons(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "get persons not implemented yet!", http.StatusNotImplemented)
+	page := extractPagination(r)
+
+	pas := personMapToSlice(persons)
+
+	sort.Slice(pas, func(i, j int) bool {
+		return pas[i].Name < pas[j].Name
+	})
+
+	startIndex := page.StartIndex()
+	if len(pas) <= startIndex {
+		log.Printf("No person record found in selected page: %+v", page)
+		http.Error(w, fmt.Sprintf("No person record found in selected pageNumber (%d)", page.Number), http.StatusNotFound)
+		return
+	}
+
+	endPos := int(math.Min(float64(len(pas)), float64(page.EndPosition())))
+
+	respPas := pas[startIndex:endPos]
+	if err := json.NewEncoder(w).Encode(respPas); err != nil {
+		respondWithError(w, http.StatusBadRequest, "Unable to encode response")
+		return
+	}
+	respPas = models.GetPersons()
+	respondWithJSON(w, http.StatusOK, respPas)
 }
 
 // handleGetPerson handles HTTP requests of the form:
@@ -46,4 +66,50 @@ func handleNewPerson(w http.ResponseWriter, r *http.Request) {
 
 func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "update person not implemented yet!", http.StatusNotImplemented)
+}
+
+func extractPagination(r *http.Request) models.Page {
+	page := models.Page{}
+	var err error
+
+	page.Number, err = requestParamAsInt(r, "pageNumber")
+	if err != nil {
+		page.Number = 1
+	}
+
+	page.Size, err = requestParamAsInt(r, "pageSize")
+	if err != nil {
+		page.Size = 100
+	}
+
+	return page
+}
+
+func requestParamAsInt(r *http.Request, key string) (int, error) {
+	valStr := r.FormValue(key)
+	val, err := strconv.Atoi(valStr)
+	if err != nil {
+		return 0, err
+	}
+	return val, nil
+}
+
+func personMapToSlice(mp map[string]models.Person) []models.Person {
+	var ps []models.Person
+	for _, p := range mp {
+		ps = append(ps, p)
+	}
+	return ps
+}
+
+func respondWithError(w http.ResponseWriter, code int, message string) {
+	respondWithJSON(w, code, map[string]string{"error": message})
+}
+
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(response)
 }

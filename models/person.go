@@ -43,7 +43,8 @@ func (p Person) Valid() (map[string]interface{}, bool) {
 }
 
 //CreatePerson Creates a person
-func (p *Person) CreatePerson() map[string]interface{} {
+func CreatePerson() map[string]interface{} {
+	var p *Person
 	if resp, ok := p.Valid(); !ok {
 		return resp
 	}
@@ -58,10 +59,18 @@ func (p *Person) CreatePerson() map[string]interface{} {
 func GetPersons() []Person {
 	var persons []Person
 
-	err := GetDB().Table("persons").Error
+	err := GetDB().Find(&persons)
 	if err != nil {
 		log.Printf("cannot get persons: %+v\n", err)
 		return nil
 	}
 	return persons
+}
+
+// DeletePerson deletes a person from the db
+func DeletePerson() error {
+	var p Person
+	err := GetDB().Where("name = ?", p.Name).Find(&p).Error
+	GetDB().Delete(&p)
+	return err
 }
