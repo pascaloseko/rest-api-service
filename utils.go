@@ -43,9 +43,3 @@ func loadConfig() {
 func version() string {
 	return "0.1"
 }
-
-// Respond response writer to incomming requests
-func Respond(w http.ResponseWriter, data map[string]interface{}) {
-	w.Header().Add("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
-}
