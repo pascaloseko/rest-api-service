@@ -116,7 +116,42 @@ func handleNewPerson(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "update person not implemented yet!", http.StatusNotImplemented)
+	personID := mux.Vars(r)["id"]
+
+	oldPerson, exist := persons[personID]
+	if !exist {
+		log.Printf("Person with id %s does not exist", personID)
+		respondWithError(w, "Person with id %s does not exist", http.StatusNotFound)
+		return
+	}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Unable to read request: %v", err)
+		respondWithError(w, "Something went wrong", http.StatusInternalServerError)
+	}
+
+	newPa := models.Person{}
+	if err := json.Unmarshal(body, &newPa); err != nil{
+		log.Printf("Invalid json in request: %v", err)
+		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
+	}
+
+	newPa.ID = oldPerson.ID
+	if err, ok := newPa.Valid(); !ok {
+		log.Println(err)
+		respondWithError(w, "Wrong values", http.StatusBadRequest)
+		return
+	}
+
+	p := models.UpdatePerson()
+
+	if err := p; err != nil {
+		respondWithError(w, "Cannot update person", http.StatusInternalServerError)
+		return
+	}
+
+	respondWithJSON(w, http.StatusAccepted, p)
 }
 
 func extractPagination(r *http.Request) models.Page {
