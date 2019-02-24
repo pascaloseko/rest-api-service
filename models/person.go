@@ -42,8 +42,8 @@ func (p Person) Valid() (map[string]interface{}, bool) {
 	return nil, false
 }
 
-// Create person
-func (p *Person) Create() map[string]interface{} {
+//CreatePerson Creates a person
+func (p *Person) CreatePerson() map[string]interface{} {
 	if resp, ok := p.Valid(); !ok {
 		return resp
 	}
@@ -55,9 +55,9 @@ func (p *Person) Create() map[string]interface{} {
 }
 
 //GetPersons get a list of persons
-func (p *Person) GetPersons() []Person {
+func GetPersons() []Person {
 	var persons []Person
-	
+
 	err := GetDB().Table("persons").Error
 	if err != nil {
 		log.Printf("cannot get persons: %+v\n", err)
