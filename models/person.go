@@ -67,6 +67,31 @@ func GetPersons() []Person {
 	return persons
 }
 
+//GetPerson gets an instance of person
+func GetPerson(id string) *Person {
+	person := &Person{}
+
+	err := GetDB().Table("persons").Where("id = ?", id).First(person).Error
+	if err != nil {
+		log.Printf("cannot get person: %+v\n", err)
+		return nil
+	}
+	return person
+}
+
+//UpdatePerson updates an instance of person
+func UpdatePerson() map[string]interface{} {
+	var p *Person
+	if resp, ok := p.Valid(); !ok {
+		return resp
+	}
+
+	GetDB().Update(p)
+	resp := Message(true, "updated")
+	resp["p"] = p
+	return resp
+}
+
 // DeletePerson deletes a person from the db
 func DeletePerson() error {
 	var p Person

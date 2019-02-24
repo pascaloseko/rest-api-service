@@ -10,6 +10,8 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/gorilla/mux"
+
 	"github.com/pborman/uuid"
 
 	"github.com/pascaloseko/go-rest/models"
@@ -27,7 +29,7 @@ func handleGetPersons(w http.ResponseWriter, r *http.Request) {
 
 	pas := personMapToSlice(persons)
 
-	sort.Slice(pas, func(i, j int) bool {
+	sort.SliceStable(pas, func(i, j int) bool {
 		return pas[i].Name < pas[j].Name
 	})
 
@@ -52,7 +54,21 @@ func handleGetPersons(w http.ResponseWriter, r *http.Request) {
 // handleGetPerson handles HTTP requests of the form:
 //     GET /persons/{personid}
 func handleGetPerson(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "get person not implemented yet!", http.StatusNotImplemented)
+	personID := mux.Vars(r)["id"]
+
+	person, exist := persons[personID]
+	if !exist {
+		log.Printf("Person with id %s does not exist", personID)
+		respondWithError(w, "Person with id %s does not exist", http.StatusNotFound)
+		return
+	}
+
+	err := json.NewEncoder(w).Encode(person)
+	if err != nil {
+		log.Printf("Error encoding results: %v", err)
+	}
+
+	respondWithJSON(w, http.StatusOK, person)
 }
 
 // handleNewPerson handles HTTP requests of the form:
