@@ -10,7 +10,7 @@ import (
 // Person details of a person
 type Person struct {
 	gorm.Model
-	UUID string `json:"id"`
+	ID   string `json:"id"`
 	Name string `json:"name"`
 	Age  int    `json:"age"`
 }
@@ -23,7 +23,7 @@ func Message(status bool, message string) map[string]interface{} {
 //Valid to check validity of a person's details
 func (p Person) Valid() (map[string]interface{}, bool) {
 	msg := ""
-	if len(strings.TrimSpace(p.UUID)) == 0 {
+	if len(strings.TrimSpace(p.ID)) == 0 {
 		return Message(false, "id cannot be empty"), false
 	}
 

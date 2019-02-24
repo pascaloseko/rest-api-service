@@ -3,11 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
 	"sort"
 	"strconv"
+
+	"github.com/pborman/uuid"
 
 	"github.com/pascaloseko/go-rest/models"
 )
@@ -39,7 +42,7 @@ func handleGetPersons(w http.ResponseWriter, r *http.Request) {
 
 	respPas := pas[startIndex:endPos]
 	if err := json.NewEncoder(w).Encode(respPas); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Unable to encode response")
+		respondWithError(w, "Unable to encode response: %+v", http.StatusBadRequest)
 		return
 	}
 	respPas = models.GetPersons()
@@ -61,7 +64,39 @@ func handleGetPerson(w http.ResponseWriter, r *http.Request) {
 // 4. adds person to list of persons
 // 5. responds with inserted person.
 func handleNewPerson(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "create new person not implemented yet!", http.StatusNotImplemented)
+	newPa := models.Person{}
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Unable to read request: %v", err)
+		respondWithError(w, "Somethin really bad happened here: %+v", http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.Unmarshal(body, &newPa); err != nil {
+		log.Printf("Invalid json in request: %v", err)
+		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
+		return
+	}
+
+	defer r.Body.Close()
+
+	newPa.ID = uuid.New()
+
+	if err, ok := newPa.Valid(); !ok {
+		log.Println(err)
+		respondWithError(w, "Wrong values", http.StatusBadRequest)
+		return
+	}
+
+	p := models.CreatePerson()
+
+	if err := p; err != nil {
+		respondWithError(w, "Cannot create person", http.StatusInternalServerError)
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, p)
 }
 
 func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +137,7 @@ func personMapToSlice(mp map[string]models.Person) []models.Person {
 	return ps
 }
 
-func respondWithError(w http.ResponseWriter, code int, message string) {
+func respondWithError(w http.ResponseWriter, message string, code int) {
 	respondWithJSON(w, code, map[string]string{"error": message})
 }
 
