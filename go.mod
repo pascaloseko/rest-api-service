@@ -1,4 +1,4 @@
-module github.com/pascaloseko/go-rest
+module github.com/pascaloseko/rest-api-service
 
 require (
 	github.com/gorilla/mux v1.7.0

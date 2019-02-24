@@ -35,7 +35,7 @@ func init() {
 
 	db = conn
 	// Database Migration
-	db.Debug().AutoMigrate(&Person{}, &Page{})
+	db.Debug().AutoMigrate(&Person{})
 }
 
 //GetDB Returns a handle to the db object
