@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 )
 
@@ -18,7 +17,7 @@ var config Configuration
 
 //P Convenience function for printing to stdout
 func p(a ...interface{}) {
-	fmt.Println(a ...)
+	fmt.Println(a...)
 }
 
 func init() {

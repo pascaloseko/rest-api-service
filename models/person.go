@@ -10,7 +10,6 @@ import (
 // Person details of a person
 type Person struct {
 	gorm.Model
-	ID   string `json:"id"`
 	Name string `json:"name"`
 	Age  int    `json:"age"`
 }

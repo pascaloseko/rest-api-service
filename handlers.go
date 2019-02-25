@@ -14,7 +14,7 @@ import (
 
 	"github.com/pborman/uuid"
 
-	"github.com/pascaloseko/go-rest/models"
+	"github.com/pascaloseko/rest-api-service/models"
 )
 
 var persons = make(map[string]models.Person)
