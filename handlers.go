@@ -43,11 +43,13 @@ func handleGetPersons(w http.ResponseWriter, r *http.Request) {
 	endPos := int(math.Min(float64(len(pas)), float64(page.EndPosition())))
 
 	respPas := pas[startIndex:endPos]
-	if err := json.NewEncoder(w).Encode(respPas); err != nil {
+
+	rp := models.GetDB().Find(&respPas)
+	if err := json.NewEncoder(w).Encode(&rp); err != nil {
 		respondWithError(w, "Unable to encode response: %+v", http.StatusBadRequest)
 		return
 	}
-	respPas = models.GetPersons()
+	respPas = pas
 	respondWithJSON(w, http.StatusOK, respPas)
 }
 
@@ -81,6 +83,7 @@ func handleGetPerson(w http.ResponseWriter, r *http.Request) {
 // 5. responds with inserted person.
 func handleNewPerson(w http.ResponseWriter, r *http.Request) {
 	newPa := models.Person{}
+	slice := make(map[string]string)
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -89,30 +92,33 @@ func handleNewPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.Unmarshal(body, &newPa); err != nil {
+	defer r.Body.Close()
+
+	if err := json.Unmarshal(body, &slice); err != nil {
 		log.Printf("Invalid json in request: %v", err)
 		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
 		return
 	}
 
-	defer r.Body.Close()
+	newPa.UUID = uuid.New()
+	newPa.Name = slice["name"]
+	newPa.Age = slice["age"]
 
-	newPa.ID = uuid.New()
+	fmt.Println(newPa)
 
-	if err, ok := newPa.Valid(); !ok {
-		log.Println(err)
-		respondWithError(w, "Wrong values", http.StatusBadRequest)
-		return
-	}
+	// if err, ok := newPa.Valid(); !ok {
+	// 	log.Println(err)
+	// 	respondWithError(w, "Wrong values", http.StatusBadRequest)
+	// 	return
+	// }
 
-	p := models.CreatePerson()
-
-	if err := p; err != nil {
+	if err := models.GetDB().Create(&newPa); err != nil {
+		fmt.Println(err)
 		respondWithError(w, "Cannot create person", http.StatusInternalServerError)
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, p)
+	respondWithJSON(w, http.StatusCreated, newPa)
 }
 
 func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
@@ -132,7 +138,7 @@ func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newPa := models.Person{}
-	if err := json.Unmarshal(body, &newPa); err != nil{
+	if err := json.Unmarshal(body, &newPa); err != nil {
 		log.Printf("Invalid json in request: %v", err)
 		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
 	}
@@ -144,7 +150,7 @@ func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p := models.UpdatePerson()
+	p := models.GetDB().Save(&newPa)
 
 	if err := p; err != nil {
 		respondWithError(w, "Cannot update person", http.StatusInternalServerError)
