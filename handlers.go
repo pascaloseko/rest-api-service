@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math"
 	"net/http"
@@ -11,8 +10,6 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-
-	"github.com/pborman/uuid"
 
 	"github.com/pascaloseko/rest-api-service/models"
 )
@@ -44,12 +41,11 @@ func handleGetPersons(w http.ResponseWriter, r *http.Request) {
 
 	respPas := pas[startIndex:endPos]
 
-	rp := models.GetDB().Find(&respPas)
-	if err := json.NewEncoder(w).Encode(&rp); err != nil {
+	respPas, _ = models.GetPersons()
+	if err := json.NewEncoder(w).Encode(&respPas); err != nil {
 		respondWithError(w, "Unable to encode response: %+v", http.StatusBadRequest)
 		return
 	}
-	respPas = pas
 	respondWithJSON(w, http.StatusOK, respPas)
 }
 
@@ -82,37 +78,27 @@ func handleGetPerson(w http.ResponseWriter, r *http.Request) {
 // 4. adds person to list of persons
 // 5. responds with inserted person.
 func handleNewPerson(w http.ResponseWriter, r *http.Request) {
-	newPa := models.Person{}
-	slice := make(map[string]string)
+	len := r.ContentLength
+	body := make([]byte, len)
+	r.Body.Read(body)
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("Unable to read request: %v", err)
-		respondWithError(w, "Somethin really bad happened here: %+v", http.StatusInternalServerError)
-		return
-	}
+	var newPa models.Person
 
 	defer r.Body.Close()
 
-	if err := json.Unmarshal(body, &slice); err != nil {
+	if err := json.Unmarshal(body, &newPa); err != nil {
 		log.Printf("Invalid json in request: %v", err)
 		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
 		return
 	}
 
-	newPa.UUID = uuid.New()
-	newPa.Name = slice["name"]
-	newPa.Age = slice["age"]
+	if err, ok := newPa.Valid(); !ok {
+		log.Println(err)
+		respondWithError(w, "Wrong values", http.StatusBadRequest)
+		return
+	}
 
-	fmt.Println(newPa)
-
-	// if err, ok := newPa.Valid(); !ok {
-	// 	log.Println(err)
-	// 	respondWithError(w, "Wrong values", http.StatusBadRequest)
-	// 	return
-	// }
-
-	if err := models.GetDB().Create(&newPa); err != nil {
+	if err := models.NewPerson(); err != nil {
 		fmt.Println(err)
 		respondWithError(w, "Cannot create person", http.StatusInternalServerError)
 		return
@@ -122,37 +108,36 @@ func handleNewPerson(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
-	personID := mux.Vars(r)["id"]
+	personID := mux.Vars(r)["uuid"]
 
-	oldPerson, exist := persons[personID]
+	_, exist := persons[personID]
 	if !exist {
 		log.Printf("Person with id %s does not exist", personID)
 		respondWithError(w, "Person with id %s does not exist", http.StatusNotFound)
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	p, err := models.GetPerson(personID)
 	if err != nil {
-		log.Printf("Unable to read request: %v", err)
-		respondWithError(w, "Something went wrong", http.StatusInternalServerError)
+		return
 	}
-
-	newPa := models.Person{}
-	if err := json.Unmarshal(body, &newPa); err != nil {
+	len := r.ContentLength
+	body := make([]byte, len)
+	r.Body.Read(body)
+	if err := json.Unmarshal(body, &p); err != nil {
 		log.Printf("Invalid json in request: %v", err)
 		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
 	}
 
-	newPa.ID = oldPerson.ID
-	if err, ok := newPa.Valid(); !ok {
+	if err, ok := p.Valid(); !ok {
 		log.Println(err)
 		respondWithError(w, "Wrong values", http.StatusBadRequest)
 		return
 	}
 
-	p := models.GetDB().Save(&newPa)
+	err = models.UpdatePerson()
 
-	if err := p; err != nil {
+	if err != nil {
 		respondWithError(w, "Cannot update person", http.StatusInternalServerError)
 		return
 	}
