@@ -8,7 +8,7 @@ import (
 
 // Person details of a person
 type Person struct {
-	ID        int64     `json:"id"`
+	ID        int64     `json:"id,omitempty"`
 	UUID      string    `json:"uuid"`
 	Name      string    `json:"name"`
 	Age       int       `json:"age"`
@@ -79,12 +79,12 @@ func GetPersons() (persons []Person, err error) {
 func GetPerson(uuid string) (p Person, err error) {
 	p = Person{}
 
-	err = GetDB().QueryRow("SELECT id, uuid, name, age, created_at FROM person WHERE uuid = $2", uuid).
+	err = GetDB().QueryRow("SELECT id, uuid, name, age, created_at FROM person WHERE uuid = $1", uuid).
 		Scan(&p.ID, &p.UUID, &p.Name, &p.Age, &p.Timestamp)
-	if err == nil {
-		log.Printf("cannot retrieve person with the uuid: %v", err)
+	if err != nil {
+		log.Printf("cannot retrieve person with the id: %v", err)
 	}
-	return p, nil
+	return
 }
 
 // UpdatePerson updates person based on uuid

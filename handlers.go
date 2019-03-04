@@ -9,9 +9,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/pborman/uuid"
-
 	"github.com/gorilla/mux"
+	"github.com/pborman/uuid"
 
 	"github.com/pascaloseko/rest-api-service/models"
 )
@@ -54,20 +53,17 @@ func handleGetPersons(w http.ResponseWriter, r *http.Request) {
 // handleGetPerson handles HTTP requests of the form:
 //     GET /persons/{personid}
 func handleGetPerson(w http.ResponseWriter, r *http.Request) {
-	personID := mux.Vars(r)["id"]
+	personID := mux.Vars(r)["uuid"]
 
-	person, exist := persons[personID]
-	if !exist {
-		log.Printf("Person with id %s does not exist", personID)
-		respondWithError(w, "Person with id %s does not exist", http.StatusNotFound)
+	person, err := models.GetPerson(personID)
+	if err != nil {
+		log.Printf("Person with id does not exist: %+v", err)
+		respondWithError(w, "Person with id does not exist", http.StatusNotFound)
 		return
 	}
-
-	err := json.NewEncoder(w).Encode(person)
 	if err != nil {
-		log.Printf("Error encoding results: %v", err)
+		return
 	}
-
 	respondWithJSON(w, http.StatusOK, person)
 }
 
@@ -97,32 +93,29 @@ func handleNewPerson(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	respondWithJSON(w, http.StatusCreated, newPa)
-	return
 }
 
 func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 	personID := mux.Vars(r)["uuid"]
 
-	_, exist := persons[personID]
-	if !exist {
-		log.Printf("Person with id %s does not exist", personID)
-		respondWithError(w, "Person with id %s does not exist", http.StatusNotFound)
+	person, err := models.GetPerson(personID)
+	if err != nil {
+		log.Printf("Person with id does not exist: %+v", err)
+		respondWithError(w, "Person with id does not exist", http.StatusNotFound)
 		return
 	}
-
-	p, err := models.GetPerson(personID)
 	if err != nil {
 		return
 	}
 	len := r.ContentLength
 	body := make([]byte, len)
 	r.Body.Read(body)
-	if err := json.Unmarshal(body, &p); err != nil {
+	if err := json.Unmarshal(body, &person); err != nil {
 		log.Printf("Invalid json in request: %v", err)
 		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
 	}
 
-	if err, ok := p.Valid(); !ok {
+	if err, ok := person.Valid(); !ok {
 		log.Println(err)
 		respondWithError(w, "Wrong values", http.StatusBadRequest)
 		return
