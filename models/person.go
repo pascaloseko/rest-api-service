@@ -45,7 +45,7 @@ func (p Person) Valid() (map[string]interface{}, bool) {
 }
 
 //NewPerson Create new person
-func NewPerson() (err error) {
+func (p *Person) NewPerson() (err error) {
 	statement := "INSERT INTO person (uuid, name, age, created_at) VALUES($1, $2, $3, $4) RETURNING *;"
 	stmt, err := GetDB().Prepare(statement)
 	if err != nil {
@@ -53,7 +53,7 @@ func NewPerson() (err error) {
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(p.UUID, p.Name, p.Age, time.Now()).Scan(&p.ID, &p.UUID, p.Name, p.Timestamp)
+	err = stmt.QueryRow(p.UUID, p.Name, p.Age, time.Now()).Scan(&p.ID, &p.UUID, &p.Name, &p.Age, &p.Timestamp)
 	return
 }
 

@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/pborman/uuid"
+
 	"github.com/gorilla/mux"
 
 	"github.com/pascaloseko/rest-api-service/models"
@@ -78,33 +80,24 @@ func handleGetPerson(w http.ResponseWriter, r *http.Request) {
 // 4. adds person to list of persons
 // 5. responds with inserted person.
 func handleNewPerson(w http.ResponseWriter, r *http.Request) {
+	var err error
 	len := r.ContentLength
 	body := make([]byte, len)
 	r.Body.Read(body)
 
 	var newPa models.Person
 
-	defer r.Body.Close()
+	newPa.UUID = uuid.New()
 
-	if err := json.Unmarshal(body, &newPa); err != nil {
-		log.Printf("Invalid json in request: %v", err)
-		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
-		return
-	}
-
-	if err, ok := newPa.Valid(); !ok {
+	json.Unmarshal(body, &newPa)
+	err = newPa.NewPerson()
+	if err != nil {
 		log.Println(err)
-		respondWithError(w, "Wrong values", http.StatusBadRequest)
+		respondWithError(w, "cannot add person", http.StatusBadRequest)
 		return
 	}
-
-	if err := models.NewPerson(); err != nil {
-		fmt.Println(err)
-		respondWithError(w, "Cannot create person", http.StatusInternalServerError)
-		return
-	}
-
 	respondWithJSON(w, http.StatusCreated, newPa)
+	return
 }
 
 func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
