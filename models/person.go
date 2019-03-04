@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -58,11 +59,15 @@ func (p *Person) NewPerson() (err error) {
 }
 
 // GetPersons get all persons in the db
-func GetPersons() (persons []Person, err error) {
-	rows, err := GetDB().Query("SELECT * FROM person")
+func (p *Person) GetPersons(start, count int) (persons []Person, err error) {
+	statement := fmt.Sprintf("SELECT id, uuid, name, age, created_at FROM person LIMIT %d OFFSET %d", count, start)
+	rows, err := GetDB().Query(statement)
 	if err != nil {
 		return nil, err
 	}
+
+	rows.Close()
+
 	for rows.Next() {
 		ps := Person{}
 		if err = rows.Scan(&ps.ID, &ps.UUID, &ps.Name, &ps.Age, &ps.Timestamp); err != nil {
@@ -71,7 +76,6 @@ func GetPersons() (persons []Person, err error) {
 
 		persons = append(persons, ps)
 	}
-	rows.Close()
 	return persons, nil
 }
 

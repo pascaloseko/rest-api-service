@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
-	"sort"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -23,31 +21,26 @@ var persons = make(map[string]models.Person)
 // 2. .sorts persons
 // 3. responds with subset of persons in page.
 func handleGetPersons(w http.ResponseWriter, r *http.Request) {
-	page := extractPagination(r)
+	count, _ := strconv.Atoi(r.FormValue("pageNumber"))
+	start, _ := strconv.Atoi(r.FormValue("pageSize"))
 
-	pas := personMapToSlice(persons)
+	var person models.Person
 
-	sort.SliceStable(pas, func(i, j int) bool {
-		return pas[i].Name < pas[j].Name
-	})
-
-	startIndex := page.StartIndex()
-	if len(pas) <= startIndex {
-		log.Printf("No person record found in selected page: %+v", page)
-		http.Error(w, fmt.Sprintf("No person record found in selected pageNumber (%d)", page.Number), http.StatusNotFound)
-		return
+	if count > 10 || count < 1 {
+		count = 10
 	}
 
-	endPos := int(math.Min(float64(len(pas)), float64(page.EndPosition())))
+	if start < 0 {
+		start = 0
+	}
 
-	respPas := pas[startIndex:endPos]
-
-	respPas, _ = models.GetPersons()
-	if err := json.NewEncoder(w).Encode(&respPas); err != nil {
-		respondWithError(w, "Unable to encode response: %+v", http.StatusBadRequest)
+	persons, err := person.GetPersons(start, count)
+	if err == nil {
+		fmt.Printf("something happened: %+v\n", err)
+		respondWithError(w, "Unable to encode response", http.StatusBadRequest)
 		return
 	}
-	respondWithJSON(w, http.StatusOK, respPas)
+	respondWithJSON(w, http.StatusOK, persons)
 }
 
 // handleGetPerson handles HTTP requests of the form:
@@ -131,23 +124,6 @@ func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusAccepted, p)
 }
 
-func extractPagination(r *http.Request) models.Page {
-	page := models.Page{}
-	var err error
-
-	page.Number, err = requestParamAsInt(r, "pageNumber")
-	if err != nil {
-		page.Number = 1
-	}
-
-	page.Size, err = requestParamAsInt(r, "pageSize")
-	if err != nil {
-		page.Size = 100
-	}
-
-	return page
-}
-
 func requestParamAsInt(r *http.Request, key string) (int, error) {
 	valStr := r.FormValue(key)
 	val, err := strconv.Atoi(valStr)
@@ -159,6 +135,7 @@ func requestParamAsInt(r *http.Request, key string) (int, error) {
 
 func personMapToSlice(mp map[string]models.Person) []models.Person {
 	var ps []models.Person
+
 	for _, p := range mp {
 		ps = append(ps, p)
 	}
