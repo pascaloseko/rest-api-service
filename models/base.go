@@ -30,6 +30,5 @@ func init() {
 
 //GetDB Returns a handle to the db object
 func GetDB() (database *sql.DB) {
-	db.Close()
 	return db
 }

@@ -20,6 +20,7 @@ var persons = make(map[string]models.Person)
 // 1. extractsPagination in request
 // 2. .sorts persons
 // 3. responds with subset of persons in page.
+// FIX persons data returning an empty slice
 func handleGetPersons(w http.ResponseWriter, r *http.Request) {
 	count, _ := strconv.Atoi(r.FormValue("pageNumber"))
 	start, _ := strconv.Atoi(r.FormValue("pageSize"))
@@ -35,7 +36,7 @@ func handleGetPersons(w http.ResponseWriter, r *http.Request) {
 	}
 
 	persons, err := person.GetPersons(start, count)
-	if err == nil {
+	if err != nil {
 		fmt.Printf("something happened: %+v\n", err)
 		respondWithError(w, "Unable to encode response", http.StatusBadRequest)
 		return
@@ -92,12 +93,10 @@ func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 	personID := mux.Vars(r)["uuid"]
 
 	person, err := models.GetPerson(personID)
+	fmt.Printf("person: %v", person)
 	if err != nil {
 		log.Printf("Person with id does not exist: %+v", err)
 		respondWithError(w, "Person with id does not exist", http.StatusNotFound)
-		return
-	}
-	if err != nil {
 		return
 	}
 	len := r.ContentLength
@@ -108,15 +107,16 @@ func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
 	}
 
-	if err, ok := person.Valid(); !ok {
-		log.Println(err)
-		respondWithError(w, "Wrong values", http.StatusBadRequest)
-		return
-	}
+	// if err, ok := person.Valid(); !ok {
+	// 	log.Println(err)
+	// 	respondWithError(w, "Wrong values", http.StatusBadRequest)
+	// 	return
+	// }
 
-	err = models.UpdatePerson()
+	err = person.UpdatePerson()
 
 	if err != nil {
+		fmt.Println(err)
 		respondWithError(w, "Cannot update person", http.StatusInternalServerError)
 		return
 	}

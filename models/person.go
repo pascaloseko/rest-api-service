@@ -92,8 +92,15 @@ func GetPerson(uuid string) (p Person, err error) {
 }
 
 // UpdatePerson updates person based on uuid
-func UpdatePerson() (err error) {
-	_, err = GetDB().Exec("UPDATE person SET name = $3, age = $4, created_at = $5 WHERE uuid = $2", p.ID, p.UUID, p.Name, p.Age, p.Timestamp)
+func (p *Person) UpdatePerson() (err error) {
+	statement := "UPDATE person SET name = $1, age = $2, created_at = $3 WHERE uuid = $4 returning id,uuid,name,age,created_at"
+	stmt, err := GetDB().Prepare(statement)
+	if err != nil {
+		return
+	}
+
+	defer stmt.Close()
+	err = stmt.QueryRow(p.Name, p.Age, p.Timestamp, p.UUID).Scan(&p.ID, &p.UUID, &p.Name, &p.Age, &p.Timestamp)
 	return
 }
 
