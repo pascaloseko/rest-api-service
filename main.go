@@ -18,7 +18,7 @@ func main() {
 
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodGet).HandlerFunc(handleGetPerson)
 	r.PathPrefix("/persons").Methods(http.MethodPost).HandlerFunc(handleNewPerson)
-	r.PathPrefix("/persons").Methods(http.MethodGet).HandlerFunc(handleGetPersons)
+	r.PathPrefix("/persons").Methods(http.MethodGet).HandlerFunc(indexHandler)
 
 	server := &http.Server{
 		Addr:           config.Address,

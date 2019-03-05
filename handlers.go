@@ -13,7 +13,19 @@ import (
 	"github.com/pascaloseko/rest-api-service/models"
 )
 
-var persons = make(map[string]models.Person)
+// indexHandler list all users/persons inthe db
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	var person models.Person
+
+	out, err := person.GetAllPersons()
+	if err != nil {
+		fmt.Printf("something happened: %+v\n", err)
+		respondWithError(w, "Unable to encode response", http.StatusBadRequest)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, out)
+}
 
 // handleGetPersons handles HTTP requests of the form:
 //     GET /persons?pageNumber=1&pageSize=300

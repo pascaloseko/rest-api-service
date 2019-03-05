@@ -45,6 +45,30 @@ func (p Person) Valid() (map[string]interface{}, bool) {
 	return nil, false
 }
 
+//GetAllPersons ...
+func (p *Person) GetAllPersons() (persons []Person, err error) {
+	statement := "SELECT id,uuid,name,age,created_at FROM person ORDER BY age DESC"
+	rows, err := GetDB().Query(statement)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	persons = []Person{}
+
+	for rows.Next() {
+		var ps Person
+		if err := rows.Scan(&ps.ID, &ps.UUID, &ps.Name, &ps.Age, &ps.Timestamp); err != nil {
+			return nil, err
+		}
+
+		persons = append(persons, ps)
+	}
+
+	return persons, nil
+}
+
 //NewPerson Create new person
 func (p *Person) NewPerson() (err error) {
 	statement := "INSERT INTO person (uuid, name, age, created_at) VALUES($1, $2, $3, $4) RETURNING *;"
