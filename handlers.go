@@ -107,12 +107,6 @@ func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
 	}
 
-	// if err, ok := person.Valid(); !ok {
-	// 	log.Println(err)
-	// 	respondWithError(w, "Wrong values", http.StatusBadRequest)
-	// 	return
-	// }
-
 	err = person.UpdatePerson()
 
 	if err != nil {
@@ -122,6 +116,28 @@ func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusAccepted, p)
+}
+
+func handleDelete(w http.ResponseWriter, r *http.Request) {
+	personID := mux.Vars(r)["uuid"]
+
+	person, err := models.GetPerson(personID)
+	fmt.Printf("person: %v", person)
+	if err != nil {
+		log.Printf("Person with id does not exist: %+v", err)
+		respondWithError(w, "Person with id does not exist", http.StatusNotFound)
+		return
+	}
+
+	err = person.Delete()
+
+	if err != nil {
+		fmt.Println(err)
+		respondWithError(w, "Cannot delete person", http.StatusInternalServerError)
+		return
+	}
+
+	respondWithJSON(w, http.StatusNoContent, p)
 }
 
 func requestParamAsInt(r *http.Request, key string) (int, error) {

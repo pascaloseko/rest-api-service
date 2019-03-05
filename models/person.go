@@ -105,7 +105,7 @@ func (p *Person) UpdatePerson() (err error) {
 }
 
 // Delete ..
-func Delete() (err error) {
+func (p *Person) Delete() (err error) {
 	_, err = GetDB().Exec("DELETE FROM person WHERE uuid = $1", p.UUID)
 	return
 }
