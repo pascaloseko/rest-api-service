@@ -1,6 +1,31 @@
 {
 	"comment": "",
 	"ignore": "test",
-	"package": [],
+	"package": [
+		{
+			"checksumSHA1": "Kh/EnzmngEgl6DxIndgpflFLm00=",
+			"path": "github.com/google/uuid",
+			"revision": "0cd6bf5da1e1c83f8b45653022c74f71af0538a4",
+			"revisionTime": "2019-02-27T21:05:49Z"
+		},
+		{
+			"checksumSHA1": "WgzN84Tx+7en7p/e8gSTupIqygw=",
+			"path": "github.com/gorilla/mux",
+			"revision": "15a353a636720571d19e37b34a14499c3afa9991",
+			"revisionTime": "2019-02-28T18:12:03Z"
+		},
+		{
+			"checksumSHA1": "939M/cQGxM25ZNqcBURY5w/cPQo=",
+			"path": "github.com/pascaloseko/rest-api-service",
+			"revision": "05a0d81e4a0fb63264a00bd3454ccfc39aa1b338",
+			"revisionTime": "2019-03-05T21:04:25Z"
+		},
+		{
+			"checksumSHA1": "UruiaCPpVcDKfBTQhAM6UomufIw=",
+			"path": "github.com/pborman/uuid",
+			"revision": "8b1b92947f46224e3b97bb1a3a5b0382be00d31e",
+			"revisionTime": "2018-09-18T08:52:46Z"
+		}
+	],
 	"rootPath": "github.com/pascaloseko/rest-api-service"
 }
