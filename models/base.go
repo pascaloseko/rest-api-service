@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"database/sql"
-// 
+	//
 	_ "github.com/lib/pq"
 )
 
@@ -25,11 +25,11 @@ func init() {
 	if err != nil {
 		log.Printf("cannot connect to db: %v", err)
 	}
-
 	db = conn
 }
 
 //GetDB Returns a handle to the db object
 func GetDB() (database *sql.DB) {
+	db.Close()
 	return db
 }
