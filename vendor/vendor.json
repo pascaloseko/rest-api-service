@@ -15,6 +15,18 @@
 			"revisionTime": "2019-02-28T18:12:03Z"
 		},
 		{
+			"checksumSHA1": "xxLSo5tKtXc7jGrR70yoEfza8Cw=",
+			"path": "github.com/lib/pq",
+			"revision": "9eb73efc1fcc404148b56765b0d3f61d9a5ef8ee",
+			"revisionTime": "2018-10-16T16:26:27Z"
+		},
+		{
+			"checksumSHA1": "AU3fA8Sm33Vj9PBoRPSeYfxLRuE=",
+			"path": "github.com/lib/pq/oid",
+			"revision": "9eb73efc1fcc404148b56765b0d3f61d9a5ef8ee",
+			"revisionTime": "2018-10-16T16:26:27Z"
+		},
+		{
 			"checksumSHA1": "939M/cQGxM25ZNqcBURY5w/cPQo=",
 			"path": "github.com/pascaloseko/rest-api-service",
 			"revision": "05a0d81e4a0fb63264a00bd3454ccfc39aa1b338",
