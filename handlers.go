@@ -3,73 +3,73 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"math"
 	"net/http"
-	"sort"
 	"strconv"
 
 	"github.com/gorilla/mux"
-
 	"github.com/pborman/uuid"
 
 	"github.com/pascaloseko/rest-api-service/models"
 )
 
-var persons = make(map[string]models.Person)
+// indexHandler list all users/persons inthe db
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	var person models.Person
+
+	out, err := person.GetAllPersons()
+	if err != nil {
+		fmt.Printf("something happened: %+v\n", err)
+		respondWithError(w, "Unable to encode response", http.StatusBadRequest)
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, out)
+}
 
 // handleGetPersons handles HTTP requests of the form:
 //     GET /persons?pageNumber=1&pageSize=300
 // 1. extractsPagination in request
 // 2. .sorts persons
 // 3. responds with subset of persons in page.
+// FIX persons data returning an empty slice
 func handleGetPersons(w http.ResponseWriter, r *http.Request) {
-	page := extractPagination(r)
+	count, _ := strconv.Atoi(r.FormValue("pageNumber"))
+	start, _ := strconv.Atoi(r.FormValue("pageSize"))
 
-	pas := personMapToSlice(persons)
+	var person models.Person
 
-	sort.SliceStable(pas, func(i, j int) bool {
-		return pas[i].Name < pas[j].Name
-	})
-
-	startIndex := page.StartIndex()
-	if len(pas) <= startIndex {
-		log.Printf("No person record found in selected page: %+v", page)
-		http.Error(w, fmt.Sprintf("No person record found in selected pageNumber (%d)", page.Number), http.StatusNotFound)
-		return
+	if count > 10 || count < 1 {
+		count = 10
 	}
 
-	endPos := int(math.Min(float64(len(pas)), float64(page.EndPosition())))
+	if start < 0 {
+		start = 0
+	}
 
-	respPas := pas[startIndex:endPos]
-
-	rp := models.GetDB().Find(&respPas)
-	if err := json.NewEncoder(w).Encode(&rp); err != nil {
-		respondWithError(w, "Unable to encode response: %+v", http.StatusBadRequest)
+	persons, err := person.GetPersons(start, count)
+	if err != nil {
+		fmt.Printf("something happened: %+v\n", err)
+		respondWithError(w, "Unable to encode response", http.StatusBadRequest)
 		return
 	}
-	respPas = pas
-	respondWithJSON(w, http.StatusOK, respPas)
+	respondWithJSON(w, http.StatusOK, persons)
 }
 
 // handleGetPerson handles HTTP requests of the form:
 //     GET /persons/{personid}
 func handleGetPerson(w http.ResponseWriter, r *http.Request) {
-	personID := mux.Vars(r)["id"]
+	personID := mux.Vars(r)["uuid"]
 
-	person, exist := persons[personID]
-	if !exist {
-		log.Printf("Person with id %s does not exist", personID)
-		respondWithError(w, "Person with id %s does not exist", http.StatusNotFound)
+	person, err := models.GetPerson(personID)
+	if err != nil {
+		log.Printf("Person with id does not exist: %+v", err)
+		respondWithError(w, "Person with id does not exist", http.StatusNotFound)
 		return
 	}
-
-	err := json.NewEncoder(w).Encode(person)
 	if err != nil {
-		log.Printf("Error encoding results: %v", err)
+		return
 	}
-
 	respondWithJSON(w, http.StatusOK, person)
 }
 
@@ -82,77 +82,47 @@ func handleGetPerson(w http.ResponseWriter, r *http.Request) {
 // 4. adds person to list of persons
 // 5. responds with inserted person.
 func handleNewPerson(w http.ResponseWriter, r *http.Request) {
-	newPa := models.Person{}
-	slice := make(map[string]string)
+	var err error
+	len := r.ContentLength
+	body := make([]byte, len)
+	r.Body.Read(body)
 
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("Unable to read request: %v", err)
-		respondWithError(w, "Somethin really bad happened here: %+v", http.StatusInternalServerError)
-		return
-	}
-
-	defer r.Body.Close()
-
-	if err := json.Unmarshal(body, &slice); err != nil {
-		log.Printf("Invalid json in request: %v", err)
-		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
-		return
-	}
+	var newPa models.Person
 
 	newPa.UUID = uuid.New()
-	newPa.Name = slice["name"]
-	newPa.Age = slice["age"]
 
-	fmt.Println(newPa)
-
-	// if err, ok := newPa.Valid(); !ok {
-	// 	log.Println(err)
-	// 	respondWithError(w, "Wrong values", http.StatusBadRequest)
-	// 	return
-	// }
-
-	if err := models.GetDB().Create(&newPa); err != nil {
-		fmt.Println(err)
-		respondWithError(w, "Cannot create person", http.StatusInternalServerError)
+	json.Unmarshal(body, &newPa)
+	err = newPa.NewPerson()
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, "cannot add person", http.StatusBadRequest)
 		return
 	}
-
 	respondWithJSON(w, http.StatusCreated, newPa)
 }
 
 func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
-	personID := mux.Vars(r)["id"]
+	personID := mux.Vars(r)["uuid"]
 
-	oldPerson, exist := persons[personID]
-	if !exist {
-		log.Printf("Person with id %s does not exist", personID)
-		respondWithError(w, "Person with id %s does not exist", http.StatusNotFound)
+	person, err := models.GetPerson(personID)
+	fmt.Printf("person: %v", person)
+	if err != nil {
+		log.Printf("Person with id does not exist: %+v", err)
+		respondWithError(w, "Person with id does not exist", http.StatusNotFound)
 		return
 	}
-
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("Unable to read request: %v", err)
-		respondWithError(w, "Something went wrong", http.StatusInternalServerError)
-	}
-
-	newPa := models.Person{}
-	if err := json.Unmarshal(body, &newPa); err != nil {
+	len := r.ContentLength
+	body := make([]byte, len)
+	r.Body.Read(body)
+	if err := json.Unmarshal(body, &person); err != nil {
 		log.Printf("Invalid json in request: %v", err)
 		respondWithError(w, "Invalid json in request: %v", http.StatusBadRequest)
 	}
 
-	newPa.ID = oldPerson.ID
-	if err, ok := newPa.Valid(); !ok {
-		log.Println(err)
-		respondWithError(w, "Wrong values", http.StatusBadRequest)
-		return
-	}
+	err = person.UpdatePerson()
 
-	p := models.GetDB().Save(&newPa)
-
-	if err := p; err != nil {
+	if err != nil {
+		fmt.Println(err)
 		respondWithError(w, "Cannot update person", http.StatusInternalServerError)
 		return
 	}
@@ -160,21 +130,26 @@ func handleUpdatePerson(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusAccepted, p)
 }
 
-func extractPagination(r *http.Request) models.Page {
-	page := models.Page{}
-	var err error
+func handleDelete(w http.ResponseWriter, r *http.Request) {
+	personID := mux.Vars(r)["uuid"]
 
-	page.Number, err = requestParamAsInt(r, "pageNumber")
+	person, err := models.GetPerson(personID)
+	fmt.Printf("person: %v", person)
 	if err != nil {
-		page.Number = 1
+		log.Printf("Person with id does not exist: %+v", err)
+		respondWithError(w, "Person with id does not exist", http.StatusNotFound)
+		return
 	}
 
-	page.Size, err = requestParamAsInt(r, "pageSize")
+	err = person.Delete()
+
 	if err != nil {
-		page.Size = 100
+		fmt.Println(err)
+		respondWithError(w, "Cannot delete person", http.StatusInternalServerError)
+		return
 	}
 
-	return page
+	respondWithJSON(w, http.StatusNoContent, p)
 }
 
 func requestParamAsInt(r *http.Request, key string) (int, error) {
@@ -188,6 +163,7 @@ func requestParamAsInt(r *http.Request, key string) (int, error) {
 
 func personMapToSlice(mp map[string]models.Person) []models.Person {
 	var ps []models.Person
+
 	for _, p := range mp {
 		ps = append(ps, p)
 	}
