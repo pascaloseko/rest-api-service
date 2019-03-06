@@ -13,6 +13,14 @@ import (
 	"github.com/pascaloseko/rest-api-service/models"
 )
 
+//DbFunc db heroku
+func DbFunc(w http.ResponseWriter, r *http.Request) {
+	if _, err := models.GetDB().Exec("CREATE TABLE IF NOT EXISTS person(id serial PRIMARY KEY,uuid VARCHAR(255),name VARCHAR(255),age INTEGER,created_at timestamp not null)"); err != nil {
+		fmt.Printf("Error creating database table: %q", err)
+		return
+	}
+}
+
 // indexHandler list all users/persons inthe db
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	var person models.Person

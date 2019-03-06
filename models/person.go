@@ -133,11 +133,3 @@ func (p *Person) Delete() (err error) {
 	_, err = GetDB().Exec("DELETE FROM person WHERE uuid = $1", p.UUID)
 	return
 }
-
-//DbFunc db heroku
-func DbFunc(){
-	if _, err := GetDB().Exec("CREATE TABLE IF NOT EXISTS person(id serial PRIMARY KEY,uuid VARCHAR(255),name VARCHAR(255),age INTEGER,created_at timestamp not null)"); err != nil{
-		fmt.Printf("Error creating database table: %q", err)
-		return
-	}
-}

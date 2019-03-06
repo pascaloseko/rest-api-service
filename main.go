@@ -5,22 +5,18 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/pascaloseko/rest-api-service/models"
-
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	r := mux.NewRouter()
-
-	models.DbFunc()
-
 	// prints out server config details
 	p("Persons", version(), "started at ", config.Address)
 
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodGet).HandlerFunc(handleGetPerson)
 	r.PathPrefix("/persons").Methods(http.MethodPost).HandlerFunc(handleNewPerson)
 	r.PathPrefix("/persons").Methods(http.MethodGet).HandlerFunc(indexHandler)
+	r.PathPrefix("/db").Methods(http.MethodGet).HandlerFunc(DbFunc)
 
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodPut).HandlerFunc(handleUpdatePerson)
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodDelete).HandlerFunc(handleDelete)
