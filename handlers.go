@@ -19,6 +19,7 @@ func DbFunc(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Error creating database table: %q", err)
 		return
 	}
+	respondWithJSON(w, http.StatusFound, "created: succefully")
 }
 
 // indexHandler list all users/persons inthe db
