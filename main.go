@@ -11,7 +11,7 @@ import (
 func main() {
 	r := mux.NewRouter()
 	// prints out server config details
-	p("Persons", version(), "started at ", config.Address)
+	p("Persons", version(), "started at ", ":"+os.Getenv("PORT"))
 
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodGet).HandlerFunc(handleGetPerson)
 	r.PathPrefix("/persons").Methods(http.MethodPost).HandlerFunc(handleNewPerson)

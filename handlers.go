@@ -64,7 +64,7 @@ func handleGetPerson(w http.ResponseWriter, r *http.Request) {
 	person, err := models.GetPerson(personID)
 	if err != nil {
 		log.Printf("Person with id does not exist: %+v", err)
-		respondWithError(w, "Person with id does not exist", http.StatusNotFound)
+		respondWithError(w, "Person with the uuid does not exist", http.StatusNotFound)
 		return
 	}
 	if err != nil {
