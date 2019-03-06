@@ -1,8 +1,9 @@
 package main
 
 import (
+	"log"
 	"net/http"
-	"time"
+	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -20,13 +21,13 @@ func main() {
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodPut).HandlerFunc(handleUpdatePerson)
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodDelete).HandlerFunc(handleDelete)
 
-	server := &http.Server{
-		Addr:           config.Address,
-		Handler:        r,
-		ReadTimeout:    time.Duration(config.ReadTimeout * int64(time.Second)),
-		WriteTimeout:   time.Duration(config.WriteTimeout * int64(time.Second)),
-		MaxHeaderBytes: 1 << 20,
-	}
+	// server := &http.Server{
+	// 	Addr:           config.Address,
+	// 	Handler:        r,
+	// 	ReadTimeout:    time.Duration(config.ReadTimeout * int64(time.Second)),
+	// 	WriteTimeout:   time.Duration(config.WriteTimeout * int64(time.Second)),
+	// 	MaxHeaderBytes: 1 << 20,
+	// }
 
-	server.ListenAndServe()
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), r))
 }
