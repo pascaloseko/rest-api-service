@@ -16,7 +16,6 @@ func main() {
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodGet).HandlerFunc(handleGetPerson)
 	r.PathPrefix("/persons").Methods(http.MethodPost).HandlerFunc(handleNewPerson)
 	r.PathPrefix("/persons").Methods(http.MethodGet).HandlerFunc(indexHandler)
-	r.PathPrefix("/db").Methods(http.MethodGet).HandlerFunc(DbFunc)
 
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodPut).HandlerFunc(handleUpdatePerson)
 	r.PathPrefix("/persons/{uuid}").Methods(http.MethodDelete).HandlerFunc(handleDelete)

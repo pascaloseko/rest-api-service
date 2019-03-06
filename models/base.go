@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -14,14 +13,14 @@ import (
 var db *sql.DB
 
 func init() {
-	username := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASS")
-	dbName := os.Getenv("DB_NAME")
+	// username := os.Getenv("DB_USER")
+	// password := os.Getenv("DB_PASS")
+	// dbName := os.Getenv("DB_NAME")
 
-	dbURI := fmt.Sprintf("user=%s dbname=%s sslmode=disable password=%s", username, dbName, password)
-	fmt.Println(dbURI)
+	// dbURI := fmt.Sprintf("user=%s dbname=%s sslmode=disable password=%s", username, dbName, password)
+	// fmt.Println(dbURI)
 
-	conn, err := sql.Open("postgres", dbURI)
+	conn, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Printf("cannot connect to db: %v", err)
 	}
