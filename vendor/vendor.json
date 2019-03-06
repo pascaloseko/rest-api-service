@@ -1,8 +1,7 @@
 {
 	"comment": "",
 	"ignore": "test",
-	"package": [
-		{
+	"package": [{
 			"checksumSHA1": "Kh/EnzmngEgl6DxIndgpflFLm00=",
 			"path": "github.com/google/uuid",
 			"revision": "0cd6bf5da1e1c83f8b45653022c74f71af0538a4",
@@ -39,5 +38,9 @@
 			"revisionTime": "2018-09-18T08:52:46Z"
 		}
 	],
-	"rootPath": "github.com/pascaloseko/rest-api-service"
+	"rootPath": "github.com/pascaloseko/rest-api-service",
+	"heroku": {
+		"install": ["./..."],
+		"goVersion": "go1.11.5"
+	}
 }
