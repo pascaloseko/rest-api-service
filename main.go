@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/pascaloseko/rest-api-service/models"
+
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	r := mux.NewRouter()
+
+	models.DbFunc()
 
 	// prints out server config details
 	p("Persons", version(), "started at ", config.Address)
